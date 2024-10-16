@@ -114,7 +114,31 @@
         "documentation": {}
     },
     {
+        "label": "JsonResponse",
+        "importPath": "django.http",
+        "description": "django.http",
+        "isExtraImport": true,
+        "detail": "django.http",
+        "documentation": {}
+    },
+    {
+        "label": "MiddlewareMixin",
+        "importPath": "django.utils.deprecation",
+        "description": "django.utils.deprecation",
+        "isExtraImport": true,
+        "detail": "django.utils.deprecation",
+        "documentation": {}
+    },
+    {
         "label": "serializers",
+        "importPath": "rest_framework",
+        "description": "rest_framework",
+        "isExtraImport": true,
+        "detail": "rest_framework",
+        "documentation": {}
+    },
+    {
+        "label": "status",
         "importPath": "rest_framework",
         "description": "rest_framework",
         "isExtraImport": true,
@@ -221,7 +245,7 @@
         "kind": 5,
         "importPath": "DRFs.settings",
         "description": "DRFs.settings",
-        "peekOfCode": "MIDDLEWARE = [\n    'django.middleware.security.SecurityMiddleware',\n    'django.contrib.sessions.middleware.SessionMiddleware',\n    'django.middleware.common.CommonMiddleware',\n    'django.middleware.csrf.CsrfViewMiddleware',\n    'django.contrib.auth.middleware.AuthenticationMiddleware',\n    'django.contrib.messages.middleware.MessageMiddleware',\n    'django.middleware.clickjacking.XFrameOptionsMiddleware',\n]\nROOT_URLCONF = 'DRFs.urls'",
+        "peekOfCode": "MIDDLEWARE = [\n    'django.middleware.security.SecurityMiddleware',\n    'django.contrib.sessions.middleware.SessionMiddleware',\n    'django.middleware.common.CommonMiddleware',\n    'django.middleware.csrf.CsrfViewMiddleware',\n    'django.contrib.auth.middleware.AuthenticationMiddleware',\n    'django.contrib.messages.middleware.MessageMiddleware',\n    'django.middleware.clickjacking.XFrameOptionsMiddleware',\n    'drfsApp.middleware.AuthMiddleware',\n]",
         "detail": "DRFs.settings",
         "documentation": {}
     },
@@ -361,6 +385,15 @@
         "documentation": {}
     },
     {
+        "label": "AuthMiddleware",
+        "kind": 6,
+        "importPath": "drfsApp.middleware",
+        "description": "drfsApp.middleware",
+        "peekOfCode": "class AuthMiddleware(MiddlewareMixin):\n    def process_request(self, request):\n        # Exclude certain URLs from authentication\n        if request.path.startswith('/categories'):\n            return None  # Allow access without authentication\n        # Check for authentication\n        if not request.user.is_authenticated:\n            return JsonResponse({'detail': 'Authentication credentials were not provided.'}, status=403)",
+        "detail": "drfsApp.middleware",
+        "documentation": {}
+    },
+    {
         "label": "category",
         "kind": 6,
         "importPath": "drfsApp.models",
@@ -383,7 +416,7 @@
         "kind": 6,
         "importPath": "drfsApp.serializer",
         "description": "drfsApp.serializer",
-        "peekOfCode": "class productSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = product\n        fields = '__all__'\nclass categorySerializer(serializers.ModelSerializer):\n    class Meta:\n        model = category\n        fields = '__all__'",
+        "peekOfCode": "class productSerializer(serializers.ModelSerializer):\n    class Meta:\n        model = product\n        fields = '__all__'\nclass categorySerializer(serializers.ModelSerializer):\n    class Meta:\n        model = category\n        fields = '__all__'\nclass createProductSerialiser(serializers.Serializer):\n    name = serializers.CharField(max_length=100)",
         "detail": "drfsApp.serializer",
         "documentation": {}
     },
@@ -392,7 +425,25 @@
         "kind": 6,
         "importPath": "drfsApp.serializer",
         "description": "drfsApp.serializer",
-        "peekOfCode": "class categorySerializer(serializers.ModelSerializer):\n    class Meta:\n        model = category\n        fields = '__all__'",
+        "peekOfCode": "class categorySerializer(serializers.ModelSerializer):\n    class Meta:\n        model = category\n        fields = '__all__'\nclass createProductSerialiser(serializers.Serializer):\n    name = serializers.CharField(max_length=100)\n    price = serializers.DecimalField(max_digits=10, decimal_places=2)\n    quantity = serializers.IntegerField()\n    category = serializers.IntegerField()\nclass creatProductListSerialiser(serializers.Serializer):",
+        "detail": "drfsApp.serializer",
+        "documentation": {}
+    },
+    {
+        "label": "createProductSerialiser",
+        "kind": 6,
+        "importPath": "drfsApp.serializer",
+        "description": "drfsApp.serializer",
+        "peekOfCode": "class createProductSerialiser(serializers.Serializer):\n    name = serializers.CharField(max_length=100)\n    price = serializers.DecimalField(max_digits=10, decimal_places=2)\n    quantity = serializers.IntegerField()\n    category = serializers.IntegerField()\nclass creatProductListSerialiser(serializers.Serializer):\n    products = createProductSerialiser(many = True)",
+        "detail": "drfsApp.serializer",
+        "documentation": {}
+    },
+    {
+        "label": "creatProductListSerialiser",
+        "kind": 6,
+        "importPath": "drfsApp.serializer",
+        "description": "drfsApp.serializer",
+        "peekOfCode": "class creatProductListSerialiser(serializers.Serializer):\n    products = createProductSerialiser(many = True)",
         "detail": "drfsApp.serializer",
         "documentation": {}
     },
@@ -401,7 +452,7 @@
         "kind": 5,
         "importPath": "drfsApp.urls",
         "description": "drfsApp.urls",
-        "peekOfCode": "urlpatterns = [\n    path('products',views.products,name=\"products\")\n]",
+        "peekOfCode": "urlpatterns = [\n    path('products',views.products,name=\"products\"),\n    path('categories',views.categories,name=\"categories\")\n]",
         "detail": "drfsApp.urls",
         "documentation": {}
     },
@@ -410,7 +461,16 @@
         "kind": 2,
         "importPath": "drfsApp.views",
         "description": "drfsApp.views",
-        "peekOfCode": "def products(request):\n    products = product.objects.all()\n    serializedProducts = productSerializer(products,many = True)\n    return Response(serializedProducts.data)\n# Create your views here.",
+        "peekOfCode": "def products(request):\n    if request.method == 'GET':\n        products = product.objects.all()\n        serializedProducts = productSerializer(products,many = True)\n        return Response(serializedProducts.data)\n    if request.method == 'POST':\n        serializedProducts = creatProductListSerialiser(data =request.data)\n        if serializedProducts.is_valid():\n            created_products = []\n            products = serializedProducts.validated_data['products']",
+        "detail": "drfsApp.views",
+        "documentation": {}
+    },
+    {
+        "label": "categories",
+        "kind": 2,
+        "importPath": "drfsApp.views",
+        "description": "drfsApp.views",
+        "peekOfCode": "def categories(request):\n    if request.method == 'GET':\n        categories = category.objects.all()\n        serializedCategories = categorySerializer(categories,many=True)\n        return Response(serializedCategories.data,status=status.HTTP_200_OK)\n# Create your views here.",
         "detail": "drfsApp.views",
         "documentation": {}
     },
